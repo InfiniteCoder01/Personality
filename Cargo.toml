@@ -3,6 +3,9 @@ name = "personality"
 version = "0.1.0"
 edition = "2021"
 
+[profile.release]
+opt-level = "z"
+
 [dependencies]
 rand = "0.8.5"
 raylib = "3.7.0"
