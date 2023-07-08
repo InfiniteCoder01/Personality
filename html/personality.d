@@ -1,1 +1,1 @@
-/mnt/Dev/Rust/Games/personality/target/wasm32-unknown-emscripten/debug/personality.js: /mnt/Dev/Rust/Games/personality/src/main.rs
+/mnt/Dev/Rust/Games/personality/target/wasm32-unknown-emscripten/debug/personality.js: /mnt/Dev/Rust/Games/personality/src/main.rs /mnt/Dev/Rust/Games/personality/src/player.rs /mnt/Dev/Rust/Games/personality/src/resources.rs /mnt/Dev/Rust/Games/personality/src/scene.rs /mnt/Dev/Rust/Games/personality/src/tower.rs
