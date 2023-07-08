@@ -1,6 +1,5 @@
 use std::ops::Index;
 
-pub use rand::Rng;
 pub use raylib::prelude::*;
 
 pub struct Animation {

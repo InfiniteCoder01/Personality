@@ -1,7 +1,7 @@
-debug:
+release:
 	cargo build --release --target=wasm32-unknown-emscripten
 	mkdir -p ./html
-	cp ./target/wasm32-unknown-emscripten/debug/deps/*.data ./html/
-	cp ./target/wasm32-unknown-emscripten/debug/*.wasm ./html/
-	cp ./target/wasm32-unknown-emscripten/debug/*.d ./html/
-	cp ./target/wasm32-unknown-emscripten/debug/*.js ./html/
+	cp ./target/wasm32-unknown-emscripten/release/deps/*.data ./html/
+	cp ./target/wasm32-unknown-emscripten/release/*.wasm ./html/
+	cp ./target/wasm32-unknown-emscripten/release/*.d ./html/
+	cp ./target/wasm32-unknown-emscripten/release/*.js ./html/

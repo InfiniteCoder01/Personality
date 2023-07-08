@@ -23,7 +23,7 @@ fn main() {
         let mut scene = Scene::new(&mut rl, &thread, 1);
 
         let mut bullet_timer = 0.0;
-        let mut roles_reversed_timer = rand::thread_rng().gen_range(20.0..50.0);
+        let mut roles_reversed_timer = get_random_value::<i32>(20, 50) as f32;
         let mut roles_reversed_text_timer = None;
         let mut play_time = 0.0;
         let mut game_over = false;
@@ -40,18 +40,18 @@ fn main() {
                 // * Bullet timer
                 bullet_timer -= rl.get_frame_time();
                 while bullet_timer <= 0.0 {
-                    let flip = rand::thread_rng().gen_bool(0.5);
+                    let flip = get_random_value::<i32>(0, 1) != 0;
                     scene.bullets.push(Bullet::new(
                         rvec2(
                             if flip { 0 } else { scene.width() },
-                            rand::thread_rng().gen_range(32..scene.height() - 24),
+                            get_random_value::<i32>(32, scene.height() - 24),
                         ),
                         rvec2(
-                            if flip { 1 } else { -1 } * rand::thread_rng().gen_range(10..200),
-                            rand::thread_rng().gen_range(-10..10),
+                            if flip { 1 } else { -1 } * get_random_value::<i32>(10, 200),
+                            get_random_value::<i32>(-10, 10),
                         ),
                     ));
-                    bullet_timer += rand::thread_rng().gen_range(1.0..2.0);
+                    bullet_timer += get_random_value::<i32>(100, 200) as f32 / 100.0;
                 }
 
                 // * Reverse timer
@@ -67,7 +67,7 @@ fn main() {
                     })
                 {
                     scene.reverse_roles(player.center());
-                    roles_reversed_timer = rand::thread_rng().gen_range(20.0..50.0);
+                    roles_reversed_timer = get_random_value::<i32>(20, 50) as f32;
                     roles_reversed_text_timer = Some(1.0);
                 }
             }
