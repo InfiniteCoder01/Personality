@@ -14,16 +14,21 @@ fn main() {
         .title("Personality")
         .build();
 
+    let mut audio = RaylibAudio::init_audio_device();
+
     let bullet_texture = rl
         .load_texture(&thread, "Assets/Bullet.png")
         .expect("Failed to load bullet texture.");
+
+    let game_over_sound =
+        Sound::load_sound("Assets/GameOver.wav").expect("Failed to load game over sound.");
 
     loop {
         let mut player = Player::new(&mut rl, &thread, rvec2(10, 40));
         let mut scene = Scene::new(&mut rl, &thread, 1);
 
         let mut bullet_timer = 0.0;
-        let mut roles_reversed_timer = get_random_value::<i32>(20, 50) as f32;
+        let mut roles_reversed_timer = get_random_value::<i32>(10, 20) as f32;
         let mut roles_reversed_text_timer = None;
         let mut play_time = 0.0;
         let mut game_over = false;
@@ -32,8 +37,8 @@ fn main() {
                 return;
             }
 
-            player.update(&rl, &mut scene);
-            scene.update(&mut rl, player.center(), &bullet_texture, &mut game_over);
+            player.update(&rl, &mut audio, &mut scene);
+            scene.update(&mut rl, &mut audio, &bullet_texture, &mut game_over);
             play_time += rl.get_frame_time();
 
             if !scene.tower().reversed() {
@@ -66,7 +71,7 @@ fn main() {
                         rect
                     })
                 {
-                    scene.reverse_roles(player.center());
+                    scene.reverse_roles(player.center(), &mut audio);
                     roles_reversed_timer = get_random_value::<i32>(20, 50) as f32;
                     roles_reversed_text_timer = Some(1.0);
                 }
@@ -98,6 +103,8 @@ fn main() {
                 );
             }
         }
+
+        audio.play_sound(&game_over_sound);
 
         while game_over {
             if rl.window_should_close() {

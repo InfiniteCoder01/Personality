@@ -13,6 +13,8 @@ pub struct Tower {
     position: Vector2,
     textures: Animation,
     shield_textures: Animation,
+    hit_sound: Sound,
+    roles_reversed_sound: Sound,
 
     health: f32,
     damaged: f32,
@@ -32,6 +34,9 @@ impl Tower {
             position,
             textures,
             shield_textures,
+            hit_sound: Sound::load_sound("Assets/Hit.wav").expect("Failed to load hit sound."),
+            roles_reversed_sound: Sound::load_sound("Assets/RolesReversed.wav")
+                .expect("Failed to load roles reversed sound."),
 
             health: 1.0,
             damaged: 0.0,
@@ -42,8 +47,7 @@ impl Tower {
     pub(crate) fn update(
         &mut self,
         rl: &mut RaylibHandle,
-        bullet: Option<f32>,
-        player_center: Vector2,
+        bullet: Option<Vector2>,
         game_over: &mut bool,
     ) {
         self.damaged = (self.damaged - rl.get_frame_time()).max(0.0);
@@ -58,7 +62,7 @@ impl Tower {
                 *game_over = true;
             }
 
-            shield.update(rl, bullet, &self.shield_textures, player_center);
+            shield.update(rl, bullet, &self.shield_textures);
             if *bad_health <= 0.0 {
                 self.state = TowerState::Normal;
             }
@@ -114,7 +118,7 @@ impl Tower {
         }
     }
 
-    pub fn reverse_roles(&mut self, flip: bool) {
+    pub fn reverse_roles(&mut self, flip: bool, audio: &mut RaylibAudio) {
         self.state = TowerState::Reversed {
             shield: Shield::new(
                 self.position()
@@ -125,17 +129,19 @@ impl Tower {
                 flip,
             ),
             bad_health: 1.0,
-            timer: 30.0,
+            timer: 10.0,
         };
+        audio.play_sound(&self.roles_reversed_sound);
     }
 
-    pub fn hit(&mut self) {
+    pub fn hit(&mut self, audio: &mut RaylibAudio) {
         if let TowerState::Reversed { bad_health, .. } = &mut self.state {
             *bad_health -= 1.0 / 10.0;
         } else {
             self.health -= 1.0 / 100.0;
         }
         self.damaged = 0.1;
+        audio.play_sound(&self.hit_sound);
     }
 
     pub fn hit_shield(&mut self) {
@@ -202,19 +208,18 @@ impl Shield {
     pub(self) fn update(
         &mut self,
         rl: &mut RaylibHandle,
-        bullet: Option<f32>,
+        bullet: Option<Vector2>,
         shield_textures: &Animation,
-        player_center: Vector2,
     ) {
-        let rate =
-            (self.position.x + shield_textures.size().x / 2.0 - player_center.x).abs() / 900.0;
+        let mut time = 0.7;
 
         self.damaged = (self.damaged - rl.get_frame_time()).max(0.0);
         if let Some(bullet) = bullet {
-            self.target = bullet - shield_textures.height() as f32 / 2.0;
+            self.target = bullet.y - shield_textures.height() as f32 / 2.0;
+            time -= (self.position.x + shield_textures.size().x / 2.0 - bullet.x).abs() / 200.0;
         }
 
-        self.position.y += (self.target - self.position.y) * rl.get_frame_time() / rate;
+        self.position.y += (self.target - self.position.y) * rl.get_frame_time() / time;
     }
 
     pub(self) fn draw(&self, d: &mut RaylibMode2D<RaylibDrawHandle>, shield_textures: &Animation) {

@@ -45,7 +45,7 @@ impl Scene {
     pub(crate) fn update(
         &mut self,
         rl: &mut RaylibHandle,
-        player_center: Vector2,
+        audio: &mut RaylibAudio,
         bullet_texture: &Texture2D,
         game_over: &mut bool,
     ) {
@@ -63,9 +63,16 @@ impl Scene {
                     }) && center.y > self.tower.position().y
                         && center.y < self.tower.position().y + self.tower.size().y
                 })
-                .min_by_key(|bullet| bullet.position().x as i32 + bullet_texture.width() / 2)
-                .map(|bullet| bullet.position().y + bullet_texture.height() as f32 / 2.0),
-            player_center,
+                .min_by_key(|bullet| {
+                    if self.tower.flipped() {
+                        -(bullet.position().x as i32 + bullet_texture.width() / 2)
+                    } else {
+                        bullet.position().x as i32 + bullet_texture.width() / 2
+                    }
+                })
+                .map(|bullet| {
+                    bullet.position() + rvec2(bullet_texture.width(), bullet_texture.height()) / 2.0
+                }),
             game_over,
         );
 
@@ -78,10 +85,22 @@ impl Scene {
                 bullet_texture.height(),
             );
             if !rrect(0, 0, self.texture.width, self.texture.height).check_collision_recs(&rect) {
-                self.bullets.remove(i);
+                if (rect.y < 0.0 || rect.y + rect.height > self.texture.height as f32)
+                    && get_random_value::<i32>(0, 5) == 0
+                {
+                    if rect.y < 0.0 {
+                        self.bullets[i].position.y = 0.0;
+                        self.bullets[i].velocity.y *= -1.0;
+                    } else {
+                        self.bullets[i].position.y = self.texture.height as f32 - rect.height;
+                        self.bullets[i].velocity.y *= -1.0;
+                    }
+                } else {
+                    self.bullets.remove(i);
+                }
             } else if self.tower.rect().check_collision_recs(&rect) {
                 self.bullets.remove(i);
-                self.tower.hit();
+                self.tower.hit(audio);
             } else if let Some(rect2) = self.tower.shield_rect() {
                 if rect2.check_collision_recs(&rect) {
                     self.bullets.remove(i);
@@ -115,9 +134,11 @@ impl Scene {
         }
     }
 
-    pub fn reverse_roles(&mut self, player_center: Vector2) {
-        self.tower
-            .reverse_roles(player_center.x < self.tower.position().x + self.tower.size().x / 2.0);
+    pub fn reverse_roles(&mut self, player_center: Vector2, audio: &mut RaylibAudio) {
+        self.tower.reverse_roles(
+            player_center.x < self.tower.position().x + self.tower.size().x / 2.0,
+            audio,
+        );
     }
 
     pub fn width(&self) -> i32 {

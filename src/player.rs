@@ -10,6 +10,9 @@ pub struct Player {
     camera: Camera2D,
     frame: f32,
     flip: i8,
+
+    shoot_sound: Sound,
+    jump_sound: Sound,
 }
 
 impl Player {
@@ -30,6 +33,9 @@ impl Player {
             },
             frame: 0.0,
             flip: 1,
+
+            shoot_sound: Sound::load_sound("Assets/Shoot.wav").expect("Failed to load sound!"),
+            jump_sound: Sound::load_sound("Assets/Jump.wav").expect("Failed to load sound!"),
         }
     }
 
@@ -71,7 +77,7 @@ impl Player {
         offset
     }
 
-    pub(crate) fn update(&mut self, rl: &RaylibHandle, scene: &mut Scene) {
+    pub(crate) fn update(&mut self, rl: &RaylibHandle, audio: &mut RaylibAudio, scene: &mut Scene) {
         let speed = 100.0;
         let rate = 0.1;
         let gravity = 400.0;
@@ -79,14 +85,18 @@ impl Player {
         let cut = 0.5;
         let scale = rl.get_screen_height() as f32 / scene.height() as f32;
         let jumps = 2;
-        let bullet_speed = 300.0;
+        let bullet_speed = 1.0;
 
-        // * Fire
+        // * Shoot
         if rl.is_mouse_button_pressed(MouseButton::MOUSE_LEFT_BUTTON) {
+            let gun = self.position() + rvec2(if self.flip < 0 { 4 } else { 6 }, 11);
+            let aim = rl.get_screen_to_world2D(rl.get_mouse_position(), self.camera) - gun;
+
             scene.bullets.push(Bullet::new(
-                self.position() + rvec2(if self.flip < 0 { 4 } else { 6 }, 11),
-                rvec2(bullet_speed * self.flip as f32, self.velocity.y * 1.0),
+                gun,
+                aim.normalized() * (aim.length() * 0.5 + 80.0) * bullet_speed,
             ));
+            audio.play_sound(&self.shoot_sound);
         }
 
         // * Movement
@@ -102,6 +112,7 @@ impl Player {
         if rl.is_key_pressed(KeyboardKey::KEY_SPACE) && self.jumps > 0 {
             self.velocity.y = jump;
             self.jumps -= 1;
+            audio.play_sound(&self.jump_sound);
         }
         if rl.is_key_released(KeyboardKey::KEY_SPACE) && self.velocity.y < 0.0 {
             self.velocity.y *= cut;
@@ -150,9 +161,9 @@ impl Player {
             self.frame = (self.frame + rl.get_frame_time() * 5.0) % 2.0;
         }
 
-        if self.velocity.x > 0.5 {
+        if rl.get_mouse_x() > rl.get_world_to_screen2D(self.position(), self.camera).x as i32 {
             self.flip = 1;
-        } else if self.velocity.x < -0.5 {
+        } else {
             self.flip = -1;
         }
     }
