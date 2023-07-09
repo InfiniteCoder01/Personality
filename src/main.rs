@@ -72,7 +72,7 @@ fn main() {
                     })
                 {
                     scene.reverse_roles(player.center(), &mut audio);
-                    roles_reversed_timer = get_random_value::<i32>(20, 50) as f32;
+                    roles_reversed_timer = get_random_value::<i32>(10, 20) as f32;
                     roles_reversed_text_timer = Some(1.0);
                 }
             }
